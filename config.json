@@ -1,6 +1,6 @@
 {
     "host": "127.0.0.1",
-    "port": 12345,
+    "port": 12340,
     "max_users": 10,
     "buffer_size": 1024,
     "log_level": "INFO"
