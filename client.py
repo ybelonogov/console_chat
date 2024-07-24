@@ -43,6 +43,9 @@ class ChatClient:
             try:
                 msg = input()
                 self.client_socket.sendall(msg.encode('utf-8'))
+                if msg.startswith('/register') or msg.startswith('/change_nick') or ' ' in msg:
+                    confirmation = self.client_socket.recv(self.BUFFER_SIZE).decode('utf-8')
+                    print(confirmation)
                 if msg == '/quit':
                     print("You have disconnected.")
                     break

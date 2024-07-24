@@ -29,18 +29,18 @@ class ChatServer:
         self.server_socket.listen(self.MAX_USERS)
         syslog.syslog(syslog.LOG_INFO, f'Server started on {self.HOST}:{self.PORT}')
 
-        while not self.shutdown_event.is_set():
-            try:
-                self.server_socket.settimeout(1)
-                client_socket, addr = self.server_socket.accept()
-                syslog.syslog(syslog.LOG_INFO, f'Connection accepted: {addr}')
-                client_thread = threading.Thread(target=self.handle_client, args=(client_socket, addr))
-                client_thread.start()
-            except socket.timeout:
-                continue
-
-        self.server_socket.close()
-        syslog.syslog(syslog.LOG_INFO, 'Server shut down')
+        try:
+            while not self.shutdown_event.is_set():
+                try:
+                    self.server_socket.settimeout(1)
+                    client_socket, addr = self.server_socket.accept()
+                    syslog.syslog(syslog.LOG_INFO, f'Connection accepted: {addr}')
+                    client_thread = threading.Thread(target=self.handle_client, args=(client_socket, addr))
+                    client_thread.start()
+                except socket.timeout:
+                    continue
+        finally:
+            self.shutdown_server()
 
     def handle_client(self, client_socket, addr):
         nickname = None
@@ -97,6 +97,7 @@ class ChatServer:
                         to_nick, message = msg.split(' ', 1)
                         if to_nick in self.users:
                             self.users[to_nick].sendall(f'{nickname} says: {message}\n'.encode('utf-8'))
+                            client_socket.sendall(b'Message sent successfully.\n')
                             syslog.syslog(syslog.LOG_INFO, f'Message from {nickname} to {to_nick}: {message}')
                         else:
                             client_socket.sendall(b'User not found\n')
@@ -109,6 +110,19 @@ class ChatServer:
                 del self.users[nickname]
             client_socket.close()
             syslog.syslog(syslog.LOG_INFO, f'Connection closed: {addr}')
+
+    def shutdown_server(self):
+        syslog.syslog(syslog.LOG_INFO, 'Shutting down server...')
+        for nickname, client_socket in list(self.users.items()):
+            try:
+                client_socket.sendall(b'Server is shutting down...\n')
+                client_socket.close()
+            except Exception as e:
+                syslog.syslog(syslog.LOG_ERR, f'Error closing connection for {nickname}: {e}')
+        self.users.clear()
+        if self.server_socket:
+            self.server_socket.close()
+        syslog.syslog(syslog.LOG_INFO, 'Server shut down')
 
     def get_welcome_message(self):
         return """
