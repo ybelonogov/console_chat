@@ -11,8 +11,11 @@ class ChatClient:
 
         self.HOST = config.get('host', '127.0.0.1')
         self.PORT = config.get('port', 12345)
+        self.SYSLOG_HOST = config.get('syslog_host', '127.0.0.1')
+        self.SYSLOG_PORT = config.get('syslog_port', 514)
         self.BUFFER_SIZE = config.get('buffer_size', 1024)
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.syslog_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     def connect(self):
         try:
@@ -46,6 +49,7 @@ class ChatClient:
                 if msg.startswith('/register') or msg.startswith('/change_nick') or ' ' in msg:
                     confirmation = self.client_socket.recv(self.BUFFER_SIZE).decode('utf-8')
                     print(confirmation)
+                self.send_to_syslog(msg)
                 if msg == '/quit':
                     print("You have disconnected.")
                     break
@@ -53,6 +57,12 @@ class ChatClient:
                 print(f"Error sending message: {e}")
                 break
         self.client_socket.close()
+
+    def send_to_syslog(self, message):
+        try:
+            self.syslog_socket.sendto(message.encode('utf-8'), (self.SYSLOG_HOST, self.SYSLOG_PORT))
+        except Exception as e:
+            print(f"Error sending message to syslog server: {e}")
 
 
 if __name__ == '__main__':
