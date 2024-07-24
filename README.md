@@ -65,3 +65,5 @@
     /shutdown
     /quit
 
+## Просмотр логов
+    cat /var/log/syslog | grep ChatServer
