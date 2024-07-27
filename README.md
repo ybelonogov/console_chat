@@ -16,8 +16,7 @@
    ```bash
    git clone <repository_url>
    cd <repository_directory>
-   
-2. **Установите недостающие библиотеки**
+
 
 ## Конфигурация
 Измените файл конфигурации config.json в корневой директории проекта:
