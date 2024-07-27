@@ -32,11 +32,11 @@
 ## Развертывание
 Запустите сервер:
 
-    python server.py config.json
+    python3 server.py config.json
 
 Запустите клиента в другом терминале:
 
-    python client.py config.json
+    python3 client.py config.json
 ## Использование
 ### Команды клиента
 - Регистрация:
